@@ -5,8 +5,9 @@ import math
 import ROOT
 from ROOT import RooFit
 import numpy as np
-ROOT.gROOT.ProcessLine(open('models.cc').read())
-from ROOT import DoubleCBFast
+
+ROOT.gSystem.Load("../HiggsAnalysis/CombinedLimit/lib/libHiggsAnalysisCombinedLimit.so");
+
 from helper import *
 ROOT.gErrorIgnoreLevel=ROOT.kError
 ROOT.RooMsgService.instance().setGlobalKillBelow(RooFit.FATAL)

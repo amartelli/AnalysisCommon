@@ -152,10 +152,7 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
   //fit Bmass in resonant category
   RooFitResult* rR = modelResonant->fitTo(*(data[1]), Extended(true), Minimizer("Minuit2"),Save(true));
 
-  RooRealVar* parNSignalResonant = (RooRealVar*)rR->floatParsFinal().find("nsigR");
-
-
-  w.var("x")->setRange("signalRegion", Blow_sideband, Bhigh_sideband);
+  w.var("x")->setRange("signalRegioncut", Blow_sideband, Bhigh_sideband);
   RooAbsReal* backgroundFraction = w.pdf("modelBkg")->createIntegral(*(w.var("x")), RooFit::NormSet(*(w.var("x"))), Range("signalRegioncut"));
   RooAbsReal* signalFraction = w.pdf("smodelR")->createIntegral(*(w.var("x")), RooFit::NormSet(*(w.var("x"))), Range("signalRegioncut"));
 
@@ -265,6 +262,7 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
 
 
   //now build the full lowq2 model with toys: dataset from combined signal(reascaled from resonant) + bkg
+  RooRealVar nResonantEvents ("nResonantEvents", "", nSignalInsignalRegion);
   RooRealVar BR_Kll ("BR_Kll", "", 4.51e-7);
   RooRealVar BR_KJPsill ("BR_KJPsill", "", 1.01e-3 * 0.0597);
 
@@ -275,9 +273,9 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
 
   //  RooFormulaVar nsigLowq2("nsigLowq2", "", "@0 * @1/@2 * @3/@4 / (@5/@6) ", RooArgList(*parNSignalResonant, BR_Kll, BR_KJPsill, AxE_Kll_mll_1p1_2p4, AxE_Kll_mll_1p1_4, AxE_KJPsill_mll_2p4_4, AxE_KJPsill_mll_1p1_4));
 
-  RooFormulaVar nsigLowq2("nsigLowq2", "", "@0 * @1/@2 * @3/@4 ", RooArgList(*parNSignalResonant, BR_Kll, BR_KJPsill, AxE_Kll_mll_1p1_2p4, AxE_KJPsill_mll_2p4_4));
+  RooFormulaVar nsigLowq2("nsigLowq2", "", "@0 * @1/@2 * @3/@4 ", RooArgList(nResonantEvents, BR_Kll, BR_KJPsill, AxE_Kll_mll_1p1_2p4, AxE_KJPsill_mll_2p4_4));
 
-  std::cout << " nResonant = " << parNSignalResonant->getVal() << " AxE = " << AxE_Kll_mll_1p1_2p4.getVal()/AxE_KJPsill_mll_2p4_4.getVal()
+  std::cout << " nResonant = " << nResonantEvents.getVal() << " AxE = " << AxE_Kll_mll_1p1_2p4.getVal()/AxE_KJPsill_mll_2p4_4.getVal()
 	    << " BR ratio = " << BR_Kll.getVal() / BR_KJPsill.getVal() << " resonant to nn resonant = " << nsigLowq2.getVal() << std::endl;
   std::cout << "\n " << std::endl;
   w.import(nsigLowq2);

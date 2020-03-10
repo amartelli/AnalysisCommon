@@ -43,12 +43,7 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
   TFile* inF1nnR = TFile::Open("signalModel_MC_isResonant0_isEE1_workspace.root");
   RooWorkspace* wSignalnnR = (RooWorkspace*)inF1nnR->Get("signalModel"); //->Clone("wSignal"); 
 
-  //read workspace for partially reco bkg
-  TFile* inF2 = TFile::Open("part_workspace.root");
-  RooWorkspace* wPartial = (RooWorkspace*)inF2->Get("myPartialWorkSpace"); //->Clone("wPartial");
-
   wSignal->Print();
-  wPartial->Print();
 
 
   float BmassFit = wSignal->var("mu_mll_2.4-4.0")->getVal();
@@ -127,7 +122,7 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
   w.factory("nbkgR[1.e4, 0., 1.e5]");
 
   w.factory("Exponential::combBkgR(x, tauR[-3.0, -100.0, -1.0e-5])");
-  w.import("part_workspace.root:myPartialWorkSpace:partial", RenameAllNodes("Bkg"));
+  w.import("partiallyRecoBkgModel_MC_isResonant1_isEE1_workspace.root:partialModel:partial_mll_2.4-4.0", RenameAllNodes("BkgR"));
 
   RooRealVar smodelR_mu("smodelR_mu", "", (wSignal->var("mu_mll_2.4-4.0"))->getVal());
   RooRealVar smodelR_sigma("smodelR_sigma", "", (wSignal->var("sigma_mll_2.4-4.0"))->getVal());
@@ -143,7 +138,7 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
   w.import(smodelR_nR);
   w.factory("RooDoubleCBFast::smodelR(x, smodelR_mu, smodelR_sigma, smodelR_aL, smodelR_nL, smodelR_aR, smodelR_nR)");
 
-  w.factory("SUM::modelBkg(f1[0.5, 0., 10.] * partial_Bkg, combBkgR)");
+  w.factory("SUM::modelBkg(f1[0.5, 0., 10.] * partial_mll_2.4-4.0_BkgR, combBkgR)");
   w.factory("SUM::modelResonant(nsigR * smodelR, nbkgR * modelBkg)");
 
   RooAbsPdf * modelResonant = w.pdf("modelResonant");
@@ -171,7 +166,7 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
   modelResonant->plotOn(plotR);
   modelResonant->plotOn(plotR, Name("fitBkg"), Components("modelBkg"),LineStyle(kDashed), LineColor(kBlue));
   modelResonant->plotOn(plotR, Name("combBkg"), Components("combBkgR"), FillColor(42), LineColor(42), DrawOption("F"), MoveToBack());
-  modelResonant->plotOn(plotR, Name("fitPartialBkg"), Components("partial_Bkg"), FillColor(40), LineColor(40), DrawOption("F"), AddTo("combBkg"));
+  modelResonant->plotOn(plotR, Name("fitPartialBkg"), Components("partial_mll_2.4-4.0_BkgR"), FillColor(40), LineColor(40), DrawOption("F"), AddTo("combBkg"));
   modelResonant->plotOn(plotR, Name("combBkg"), Components("combBkgR"), FillColor(42), LineColor(42), DrawOption("F"), MoveToBack());
   modelResonant->plotOn(plotR, Name("fitSig"), Components("smodelR"),LineColor(kRed+1));
   data[1]->plotOn(plotR, Binning(50));
@@ -208,9 +203,9 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
   w.factory("nbkgLowq2[500, 0., 1.e5]");
 
   w.factory("Exponential::combBkgL(x, tauL[-3.0, -100.0, -1.0e-5])");
-  w.import("part_workspace.root:myPartialWorkSpace:partial", RenameAllNodes("BkgL"));
+  w.import("partiallyRecoBkgModel_MC_isResonant0_isEE1_workspace.root:partialModel:partial_mll_1.1-2.4", RenameAllNodes("BkgL"));
 
-  w.factory("SUM::modelBkgL(f2[0.5,0.,1.] * partial_BkgL, combBkgL)");
+  w.factory("SUM::modelBkgL(f2[0.5,0.,1.] * partial_mll_1.1-2.4_BkgL, combBkgL)");
   w.factory("SUM::modelBkgLowq2(nbkgLowq2 * modelBkgL)");
 
   RooAbsPdf * modelBkgLowq2 = w.pdf("modelBkgLowq2");
@@ -230,8 +225,7 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
   plotL->SetTitle("");
   data[0]->plotOn(plotL, Binning(50));
   modelBkgLowq2->plotOn(plotL);
-  modelBkgLowq2->plotOn(plotL, Name("fitBkg"), Components("modelBkgLowq2"),LineStyle(kDashed), LineColor(kBlue));
-  modelBkgLowq2->plotOn(plotL, Name("fitPartialBkgL"), Components("partial_BkgL"), FillColor(40), LineColor(40), DrawOption("F"));
+  modelBkgLowq2->plotOn(plotL, Name("fitBkg"), Components("modelBkgLowq2"),LineStyle(kDashed), LineColor(kBlue), Range("Slow,Shigh"));
   data[0]->plotOn(plotL, Binning(50));
 
 
@@ -251,7 +245,6 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
   ccL->Update();
 
   TLegend tlL(0.70,0.5,0.90,0.70);
-  tlL.AddEntry(plotL->findObject("fitPartialBkgL"), "partial","l");
   tlL.AddEntry(plotL->findObject("fitBkg"), "all bkg","l");
   tlL.SetTextFont(42);
   tlL.SetTextSize(0.04);
@@ -385,7 +378,7 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
   simPdf.plotOn(frame1, RooFit::Slice(sample, "lowq2"), RooFit::ProjWData(RooArgSet(sample), combData));  
   simPdf.plotOn(frame1, RooFit::Slice(sample, "lowq2"), RooFit::ProjWData(RooArgSet(sample), combData), Name("fitBkg"), Components("modelBkgL"), LineStyle(kDashed), LineColor(kBlue));
   simPdf.plotOn(frame1, RooFit::Slice(sample, "lowq2"), RooFit::ProjWData(RooArgSet(sample), combData), Name("combBkg"), Components("combBkgL"), FillColor(42), LineColor(42), MoveToBack(), DrawOption("F"));
-  simPdf.plotOn(frame1, RooFit::Slice(sample, "lowq2"), RooFit::ProjWData(RooArgSet(sample), combData), Name("fitPartialBkg"), Components("partial_BkgL"), FillColor(40), LineColor(40), DrawOption("F"), AddTo("combBkg"));
+  simPdf.plotOn(frame1, RooFit::Slice(sample, "lowq2"), RooFit::ProjWData(RooArgSet(sample), combData), Name("fitPartialBkg"), Components("partial_mll_1.1-2.4_BkgL"), FillColor(40), LineColor(40), DrawOption("F"), AddTo("combBkg"));
   simPdf.plotOn(frame1, RooFit::Slice(sample, "lowq2"), RooFit::ProjWData(RooArgSet(sample), combData), Name("combBkg"), Components("combBkgL"), FillColor(42), LineColor(42), MoveToBack(), DrawOption("F"));
   simPdf.plotOn(frame1, RooFit::Slice(sample, "lowq2"), RooFit::ProjWData(RooArgSet(sample), combData), Name("fitSig"), Components("smodelL"), LineColor(kRed+1));
   combData.plotOn(frame1, Binning(50), RooFit::Cut("sample==sample::lowq2"));
@@ -394,7 +387,7 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
   simPdf.plotOn(frame2, RooFit::Slice(sample, "resonant"), RooFit::ProjWData(RooArgSet(sample), combData));
   simPdf.plotOn(frame2, RooFit::Slice(sample, "resonant"), RooFit::ProjWData(RooArgSet(sample), combData), Name("fitBkg"), Components("modelBkg"), LineStyle(kDashed), LineColor(kBlue));
   simPdf.plotOn(frame2, RooFit::Slice(sample, "resonant"), RooFit::ProjWData(RooArgSet(sample), combData), Name("combBkg"), Components("combBkgR"), FillColor(42), LineColor(42), MoveToBack(), DrawOption("F"));
-  simPdf.plotOn(frame2, RooFit::Slice(sample, "resonant"), RooFit::ProjWData(RooArgSet(sample), combData), Name("fitPartialBkg"), Components("partial_Bkg"), FillColor(40), LineColor(40), DrawOption("F"), AddTo("combBkg"));
+  simPdf.plotOn(frame2, RooFit::Slice(sample, "resonant"), RooFit::ProjWData(RooArgSet(sample), combData), Name("fitPartialBkg"), Components("partial_mll_2.4-4.0_BkgR"), FillColor(40), LineColor(40), DrawOption("F"), AddTo("combBkg"));
   simPdf.plotOn(frame2, RooFit::Slice(sample, "resonant"), RooFit::ProjWData(RooArgSet(sample), combData), Name("combBkg"), Components("combBkgR"), FillColor(42), LineColor(42), MoveToBack(), DrawOption("F"));
   simPdf.plotOn(frame2, RooFit::Slice(sample, "resonant"), RooFit::ProjWData(RooArgSet(sample), combData), Name("fitSig"), Components("smodelR"), LineColor(kRed+1));
   combData.plotOn(frame2, Binning(50), RooFit::Cut("sample==sample::resonant"));
@@ -404,8 +397,6 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
   TCanvas* tc = new TCanvas("tc", "", 1300, 600);
   tc->Divide(2);
   tc->cd(1);
-  //gPad->SetLeftMargin(0.15);
-  //  frame1->GetYaxis()->SetTitleOffset(1.4);
   frame1->Draw();
 
   TPaveText ptCombL(0.65,0.70,0.85,0.90,"nbNDC");
@@ -432,8 +423,6 @@ void makeSimultaneousFits(int isEE=1, float mvaCut = 12.68){
 
 
   tc->cd(2);
-  //gPad->SetLeftMargin(0.15);
-  //  frame2->GetYaxis()->SetTitleOffset(1.4);
   frame2->Draw();
 
   TPaveText ptCombR(0.65,0.70,0.85,0.90,"nbNDC");

@@ -39,6 +39,12 @@ Need to adapt format for input files to other's ntuples
 ```shell
 python makePlot_fitPeak_unbinned.py -p -i /afs/cern.ch/user/k/klau/myWorkspace/public/ForArabella/03Mar2020_pf/RootTree_2020Jan16_BdToKstarJpsi_ToKPiee_BToKEEAnalyzer_2020Feb18_fullq2_pf_isoPFMVADphiptImb_weighted_pauc02_mva.root -o part_workspace.root
 ```
+Model WP dependent, q2 bin dependent and for both resonant and non-resonant
+```shell
+root modelFrom_partialRecoBkg.C
+```
+
+
 
 * run the simultaneous fit on the resonant (data) and non-resonant (toy MC) to extract expected S/sqrt(S+B) with error
   - import models for signal (MC resonant) and partially reconstructed background. Build resonant_PDF (signal + partialRecoBkg + expo for combinatorial bkg)

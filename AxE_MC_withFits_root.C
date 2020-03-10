@@ -88,12 +88,12 @@ void AxE_MC_withFits_root(int isMC=1, int isEE=1, int isResonant=0, float mvaCut
   //loop over tree load hostos and RooDataSet
   TH1F* hHisto[3];
   RooWorkspace w("signalModel");
-  RooRealVar x("x", "", 4.4, 6.);
+  RooRealVar x("x", "", 4.5, 6.);
   RooDataSet* data[3];
 
   int ijC = 0;
   for(auto ij: mll_bins_Range){
-    hHisto[ijC] = new TH1F(Form("hHisto_mll_%.1f-%.1f", ij.first, ij.second), "", 500, 4.4, 6.);
+    hHisto[ijC] = new TH1F(Form("hHisto_mll_%.1f-%.1f", ij.first, ij.second), "", 500, 4.5, 6.);
 
     data[ijC] = new RooDataSet(Form("data_mll_%.1f-%.1f", ij.first, ij.second), 
 			       Form("data_mll_%.1f-%.1f", ij.first, ij.second), RooArgSet(x));
